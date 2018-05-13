@@ -31,16 +31,20 @@ beforeEach(async () => {
 });
 
 describe('Campaigns', () => {
+
+	// Deploys a basic factory and campagin
 	it('deploys a factory and a campaign', () => {
 		assert.ok(factory.options.address);
 		assert.ok(campaign.options.address);
 	});
 
+	// Marks caller as campaign manager
 	it('marks caller as campaign manager', async () => {
 		const manager = await campaign.methods.manager().call();
 		assert.equal(accounts[0], manager);
 	});
 
+	// Allows people to contribute and marks them as approvers
 	it('allows people to contribute crypto and marks them as approvers', async () => {
 		await campaign.methods.contribute().send({
 			value: '200',
@@ -51,6 +55,7 @@ describe('Campaigns', () => {
 		assert(isContributer);
 	});
 
+	// Requires minimum campaign contribution
 	it('requires a minimum contribution', async () => {
 		try {
 			await campaign.methods.contribute().send({
@@ -63,6 +68,7 @@ describe('Campaigns', () => {
 		}
 	});
 
+	// Allows manager to make a payment request
 	it('allows a manager to make a payment request', async () => {
 		await campaign.methods
 			.createRequest('Buy food', '100', accounts[1], 0)
@@ -75,6 +81,7 @@ describe('Campaigns', () => {
 			assert.equal('Buy food', request.description);
 	});
 
+	// Process a payment request
 	it('processes request', async () => {
 		await campaign.methods.contribute().send({
 			from: accounts[0],
@@ -100,7 +107,42 @@ describe('Campaigns', () => {
 
 		let balance = await web3.eth.getBalance(accounts[1]);
 		balance = web3.utils.fromWei(balance, 'ether');
-		console.log(balance);
 		assert(balance > 104);
+	});
+
+	// Process payment request for multiple accounts
+	it('processing multiple requests', async () => {
+		await campaign.methods.contribute().send({
+			from: accounts[0],
+			value: web3.utils.toWei('10', 'ether')
+		});
+
+		await campaign.methods
+			.createRequest('ABBA', web3.utils.toWei('3', 'ether'), accounts[1], 0)
+			.send({
+				from: accounts[0],
+				gas: '1000000'
+			});
+
+		await campaign.methods
+			.createRequest('BBAA', web3.utils.toWei('4', 'ether'), accounts[2], 0)
+			.send({
+				from: accounts[0],
+				gas: '1000000'
+			});
+
+		await campaign.methods.approveRequest(0).send({
+			from: accounts[0],
+			gas: '1000000'
+		});
+
+		await campaign.methods.finalizeRequest(0).send({
+			from: accounts[0],
+			gas: '1000000'
+		});
+
+		let balance = await web3.eth.getBalance(accounts[0]);
+		balance = web3.utils.fromWei(balance, 'ether');
+		assert(balance > 50);
 	});
 });
