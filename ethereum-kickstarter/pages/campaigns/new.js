@@ -3,6 +3,7 @@ import { Form, Button, Input, Message } from 'semantic-ui-react';
 import Layout from '../../components/Layout';
 import factory from '../../ethereum/factory';
 import web3 from '../../ethereum/web3';
+import { Router } from '../../routes';
 
 export default class CampaignNew extends Component {
 	state = {
@@ -22,13 +23,17 @@ export default class CampaignNew extends Component {
 				.createCampaign(this.state.minimumContribution)
 				.send({
 					from: accounts[0]
-			});
+			}); // Code should take 15 to 30 seconds.
+
+			Router.pushRoute('/');
+
 		} catch (err) {
 			this.setState({ errorMessage: err.message });
 		}
 
 		this.setState({ loading: false });
 	};
+
 
 	render() {
 		return (
