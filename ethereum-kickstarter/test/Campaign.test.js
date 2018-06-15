@@ -145,4 +145,5 @@ describe('Campaigns', () => {
 		balance = web3.utils.fromWei(balance, 'ether');
 		assert(balance > 50);
 	});
+
 });
